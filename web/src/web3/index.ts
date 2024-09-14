@@ -1,9 +1,9 @@
 import Web3 from 'web3'
 import abi from './abi.json'
-import {get, writable, type Writable} from 'svelte/store'
+import {get, writable} from 'svelte/store'
 
 
-const contractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'
+const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
 
 const web3 = new Web3('http://127.0.0.1:8545/')
 
@@ -14,27 +14,29 @@ export interface Twit {
     createdOn: number
 }
 
+export const initialized = writable<boolean>(false)
 export const account = writable<string | null>(null)
+export const accounts = writable<string[]>([])
 
 export async function initialize() {
     if (!window.ethereum) {
         throw new Error('no metamask')
     }
 
-    const accounts: string[] = await window.ethereum.request({ method: "eth_requestAccounts" });
-    if (!accounts.length) {
+    const userAccounts: string[] = await window.ethereum.request({ method: "eth_requestAccounts" });
+    if (!userAccounts.length) {
         throw new Error('no accounts')
     }
 
-    account.set(accounts[0])
-
-    return account as Writable<string>
+    accounts.set(userAccounts)
+    account.set(userAccounts[0])
+    initialized.set(true)
 }
 
 export async function postTwit(text: string) {
     try {
         const gasEstimation = await contractInstance.methods.postTwit(text).estimateGas()
-        await contractInstance.methods.postTwit(text).send({ from: getAccountSnapshot(), gas: gasEstimation.toString() });
+        await contractInstance.methods.postTwit(text).send({ from: getCurrentAccount(), gas: gasEstimation.toString() });
     } catch (e) {
         console.error(e)
     }
@@ -43,15 +45,15 @@ export async function postTwit(text: string) {
 export async function getUserTwits(account: string): Promise<Twit[]> {
     try {
         const gasEstimation = await contractInstance.methods.getUserTwits(account).estimateGas()
-        console.log(gasEstimation)
-        return await contractInstance.methods.getUserTwits(account).call({ from: getAccountSnapshot(), gas: gasEstimation.toString() });
+        const result = await contractInstance.methods.getUserTwits(account).call({ from: account, gas: gasEstimation.toString() });
+        return result as Twit[] || [];
     } catch (e) {
         console.error(e)
         return []
     }
 }
 
-function getAccountSnapshot() {
+export function getCurrentAccount() {
     const currentAccount = get(account)
     if (!currentAccount) {
         throw new Error('not initialized')
@@ -59,3 +61,43 @@ function getAccountSnapshot() {
 
     return currentAccount
 }
+
+export async function refreshAccounts(): Promise<void> {
+    try {
+        if (!window.ethereum) {
+            throw new Error('no metamask')
+        }
+        initialized.set(false)
+        const userAccounts: string[]  = await window.ethereum.request({ method: 'eth_accounts' });
+        if (userAccounts.length > 0) {
+            accounts.set(userAccounts)
+            account.set(userAccounts[0])
+        }
+    } catch (error) {
+        console.error('Failed to refresh accounts', error);
+    }
+    initialized.set(true)
+}
+
+export function listenForAccountChanges(): () => void {
+    if (!window.ethereum) {
+        throw new Error('no metamask')
+    }
+
+    const callback = (userAccounts: string[]) => {
+        accounts.set(userAccounts)
+
+        const currentAccount = getCurrentAccount()
+        if (!!currentAccount && userAccounts.includes(currentAccount)) {
+            
+        }
+        if (userAccounts.length > 0) {
+            account.set(userAccounts[0]);
+        } else {
+            account.set(null);
+        }
+    }
+
+    window.ethereum.on('accountsChanged', callback);
+    return () => window.ethereum?.removeListener('accountsChanged', callback);
+  }

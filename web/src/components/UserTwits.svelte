@@ -1,19 +1,13 @@
 <script lang="ts">
-    import { getUserTwits } from "../web3";
+    import { type Twit } from "../web3";
 
-    export let account: string;
-
-    let twittsPromise = getUserTwits(account);
+    export let twits: Twit[];
 </script>
 
 <div>
-    {#await twittsPromise}
-        <p class=" text-center">Loading...</p>
-    {:then twitts}
-        {#each twitts as twitt}
-            <p>
-                {twitt.text}
-            </p>
-        {/each}
-    {/await}
+    {#each twits as twit}
+        <p>
+            {twit.text}
+        </p>
+    {/each}
 </div>

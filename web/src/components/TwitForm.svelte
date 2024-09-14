@@ -3,6 +3,8 @@
     import { Button } from "./ui/button";
     import { postTwit } from "../web3";
 
+    export let onTwitAdded: () => void;
+
     let text = "";
     let isLoading = false;
 
@@ -13,6 +15,7 @@
         } finally {
             text = "";
             isLoading = false;
+            onTwitAdded();
         }
     }
 </script>

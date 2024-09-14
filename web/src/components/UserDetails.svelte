@@ -1,12 +1,28 @@
 <script lang="ts">
     import TwitForm from "./TwitForm.svelte";
     import UserTwits from "./UserTwits.svelte";
+    import { getUserTwits, type Twit } from "../web3";
 
     export let account: string;
+    export let showForm = false;
+
+    let twitsPromise: Promise<Twit[]> = null!;
+
+    $: twitsPromise = getUserTwits(account);
+
+    function refreshTwits() {
+        twitsPromise = getUserTwits(account);
+    }
 </script>
 
 <div class="flex flex-col gap-2">
     {account}
-    <UserTwits {account} />
-    <TwitForm />
+    {#await twitsPromise}
+        <p class=" text-center">Loading...</p>
+    {:then twits}
+        <UserTwits {twits} />
+    {/await}
+    {#if showForm}
+        <TwitForm onTwitAdded={refreshTwits} />
+    {/if}
 </div>

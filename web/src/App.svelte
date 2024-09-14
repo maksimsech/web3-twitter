@@ -1,17 +1,24 @@
 <script lang="ts">
-    import type { Writable } from "svelte/store";
-    import { initialize, account } from "./web3";
-    import UserDetails from "@/components/UserDetails.svelte";
+    import { onMount, onDestroy } from "svelte";
+    import { initialize, listenForAccountChanges } from "./web3";
+    import Router from "./pages/Router.svelte";
+    import AddressSelector from "./components/AddressSelector.svelte";
 
-    let init = initialize();
+    let unsubscribe = () => {};
 
-    let currentAccount = account as Writable<string>;
+    onMount(async () => {
+        await initialize();
+        unsubscribe = listenForAccountChanges();
+    });
+
+    onDestroy(() => {
+        unsubscribe();
+    });
 </script>
 
+<header class="flex justify-end">
+    <AddressSelector />
+</header>
 <main>
-    {#await init}
-        <p class=" text-center">Loading...</p>
-    {:then}
-        <UserDetails account={$currentAccount} />
-    {/await}
+    <Router />
 </main>
