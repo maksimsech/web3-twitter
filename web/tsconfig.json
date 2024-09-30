@@ -15,6 +15,9 @@
         "checkJs": true,
         "isolatedModules": true,
         "moduleDetection": "force",
+        "types": [
+            "./src/vite-env.d.ts"
+        ],
         "paths": {
             "@/components": [
                 "./src/components"
@@ -24,6 +27,9 @@
             ],
             "@/utils": [
                 "./src/utils.ts"
+            ],
+            "@/web3": [
+                "./src/web3"
             ]
         }
     },

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Input } from "./ui/input";
     import { Button } from "./ui/button";
-    import { postTwit } from "../web3";
+    import { postTwit } from "@/web3";
 
     export let onTwitAdded: () => void;
 

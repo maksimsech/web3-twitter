@@ -1,17 +1,18 @@
 <script lang="ts">
+    import type { Address } from "viem";
     import TwitForm from "./TwitForm.svelte";
     import UserTwits from "./UserTwits.svelte";
-    import { getUserTwits, type Twit } from "../web3";
+    import { getUserTwits, type Twit } from "@/web3";
 
     export let account: string;
     export let showForm = false;
 
-    let twitsPromise: Promise<Twit[]> = null!;
+    let twitsPromise: Promise<ReadonlyArray<Twit>> = null!;
 
-    $: twitsPromise = getUserTwits(account);
+    $: twitsPromise = getUserTwits(account as Address);
 
     function refreshTwits() {
-        twitsPromise = getUserTwits(account);
+        twitsPromise = getUserTwits(account as Address);
     }
 </script>
 

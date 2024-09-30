@@ -1,103 +1,84 @@
-import Web3 from 'web3'
-import abi from './abi.json'
-import {get, writable} from 'svelte/store'
-
+import {metaMask} from '@wagmi/connectors'
+import {createConfig, getAccount, getChainId, getConnectors, http, injected, readContract, watchAccount, watchChainId, watchConnectors, writeContract, reconnect as reconnectWagmi} from '@wagmi/core'
+import {get, writable, readable} from 'svelte/store'
+import {base, hardhat} from 'viem/chains'
+import { abi } from './abi'
+import {checksumAddress, type Address} from 'viem'
 
 const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
 
-const web3 = new Web3('http://127.0.0.1:8545/')
+const chains = [
+    hardhat, // Local chain
+] as const;
 
-const contractInstance = new web3.eth.Contract(abi, contractAddress)
+const config = createConfig({
+    chains,
+    connectors: [],
+    transports: {
+        [hardhat.id]: http(),
+    }
+})
+
+
+export const connectors = readable(getConnectors(config), (set) => 
+    watchConnectors(config, { onChange: set })
+)
+
+export const chainId = readable(getChainId(config), (set) =>
+    watchChainId(config, { onChange: set })
+)
+
+export const account = readable(getAccount(config), (set) =>
+    watchAccount(config, { onChange: set })
+)
+
+export const provider = readable<unknown | undefined>(undefined, (set) =>
+    watchAccount(config, {
+        onChange: async (account) => {
+            if (!account.connector) {
+                return set(undefined)
+            }
+
+            set(await account.connector?.getProvider())
+        }
+    })
+)
+
+export async function reconnect() {
+    await reconnectWagmi(config)
+}
 
 export interface Twit {
     text: string
     createdOn: number
 }
 
-export const initialized = writable<boolean>(false)
-export const account = writable<string | null>(null)
-export const accounts = writable<string[]>([])
-
-export async function initialize() {
-    if (!window.ethereum) {
-        throw new Error('no metamask')
-    }
-
-    const userAccounts: string[] = await window.ethereum.request({ method: "eth_requestAccounts" });
-    if (!userAccounts.length) {
-        throw new Error('no accounts')
-    }
-
-    accounts.set(userAccounts)
-    account.set(userAccounts[0])
-    initialized.set(true)
+export async function getUserTwits(userAddress: Address): Promise<ReadonlyArray<Twit>> {
+    userAddress = checksumAddress(userAddress)
+    const result = await readContract(config, {
+        abi,
+        address: contractAddress,
+        functionName: 'getUserTwits',
+        args: [
+            userAddress,
+        ],
+        account: get(account)?.address
+    })
+    return result.map(r => ({
+        text: r.text,
+        createdOn: Number(r.createdOn.toString())
+    }))
 }
 
 export async function postTwit(text: string) {
-    try {
-        const gasEstimation = await contractInstance.methods.postTwit(text).estimateGas()
-        await contractInstance.methods.postTwit(text).send({ from: getCurrentAccount(), gas: gasEstimation.toString() });
-    } catch (e) {
-        console.error(e)
-    }
+    console.log(getChainId(config))
+    return await writeContract(config, {
+        abi,
+        address: contractAddress,
+        functionName: 'postTwit',
+        args: [
+            text,
+        ],
+        account: get(account)?.address
+    })
 }
-
-export async function getUserTwits(account: string): Promise<Twit[]> {
-    try {
-        const gasEstimation = await contractInstance.methods.getUserTwits(account).estimateGas()
-        const result = await contractInstance.methods.getUserTwits(account).call({ from: account, gas: gasEstimation.toString() });
-        return result as Twit[] || [];
-    } catch (e) {
-        console.error(e)
-        return []
-    }
-}
-
-export function getCurrentAccount() {
-    const currentAccount = get(account)
-    if (!currentAccount) {
-        throw new Error('not initialized')
-    }
-
-    return currentAccount
-}
-
-export async function refreshAccounts(): Promise<void> {
-    try {
-        if (!window.ethereum) {
-            throw new Error('no metamask')
-        }
-        initialized.set(false)
-        const userAccounts: string[]  = await window.ethereum.request({ method: 'eth_accounts' });
-        if (userAccounts.length > 0) {
-            accounts.set(userAccounts)
-            account.set(userAccounts[0])
-        }
-    } catch (error) {
-        console.error('Failed to refresh accounts', error);
-    }
-    initialized.set(true)
-}
-
-export function listenForAccountChanges(): () => void {
-    if (!window.ethereum) {
-        throw new Error('no metamask')
-    }
-
-    const callback = (userAccounts: string[]) => {
-        accounts.set(userAccounts)
-
-        const currentAccount = getCurrentAccount()
-        if (!!currentAccount && userAccounts.includes(currentAccount)) {
-            
-        }
-        if (userAccounts.length > 0) {
-            account.set(userAccounts[0]);
-        } else {
-            account.set(null);
-        }
-    }
-
-    window.ethereum.on('accountsChanged', callback);
-    return () => window.ethereum?.removeListener('accountsChanged', callback);
-  }

@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { type Twit } from "../web3";
+    import { type Twit } from "@/web3";
 
-    export let twits: Twit[];
+    export let twits: ReadonlyArray<Twit>;
 </script>
 
 <div>

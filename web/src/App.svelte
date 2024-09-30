@@ -1,23 +1,16 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import { initialize, listenForAccountChanges } from "./web3";
     import Router from "./pages/Router.svelte";
-    import AddressSelector from "./components/AddressSelector.svelte";
+    import { UserButton } from "@/components/userButton";
+    import { onMount } from "svelte";
+    import { reconnect } from "./web3";
 
-    let unsubscribe = () => {};
-
-    onMount(async () => {
-        await initialize();
-        unsubscribe = listenForAccountChanges();
-    });
-
-    onDestroy(() => {
-        unsubscribe();
+    onMount(() => {
+        reconnect();
     });
 </script>
 
 <header class="flex justify-end">
-    <AddressSelector />
+    <UserButton />
 </header>
 <main>
     <Router />
