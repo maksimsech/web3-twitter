@@ -4,10 +4,7 @@
 
     export let account: string;
 
-    $: console.log($currentAccount);
-
-    $: showForm =
-        account.toLowerCase() === $currentAccount.address?.toLowerCase();
+    $: showForm = account.toLowerCase() === $currentAccount.address?.toLowerCase();
 </script>
 
 <UserDetails {account} {showForm} />

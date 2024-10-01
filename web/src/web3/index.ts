@@ -1,8 +1,21 @@
-import {metaMask} from '@wagmi/connectors'
-import {createConfig, getAccount, getChainId, getConnectors, http, injected, readContract, watchAccount, watchChainId, watchConnectors, writeContract, reconnect as reconnectWagmi} from '@wagmi/core'
-import {get, writable, readable} from 'svelte/store'
-import {base, hardhat} from 'viem/chains'
-import { abi } from './abi'
+import {
+    createConfig,
+    getAccount,
+    getChainId,
+    getConnectors,
+    http,
+    readContract,
+    watchAccount,
+    watchChainId,
+    watchConnectors,
+    writeContract,
+    reconnect as reconnectWagmi,
+    getConnections,
+    watchConnections,
+} from '@wagmi/core'
+import {get, readable} from 'svelte/store'
+import {hardhat} from 'viem/chains'
+import {abi} from './abi'
 import {checksumAddress, type Address} from 'viem'
 
 const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
@@ -30,6 +43,10 @@ export const chainId = readable(getChainId(config), (set) =>
 
 export const account = readable(getAccount(config), (set) =>
     watchAccount(config, { onChange: set })
+)
+
+export const connections = readable(getConnections(config), (set) =>
+    watchConnections(config, { onChange: set })
 )
 
 export const provider = readable<unknown | undefined>(undefined, (set) =>

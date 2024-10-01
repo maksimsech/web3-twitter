@@ -1,17 +1,20 @@
 <script lang="ts">
-    import { Button } from "@/components/ui/button";
+    import { Button, buttonVariants } from "@/components/ui/button";
     import { account } from "@/web3";
     import Connect from "./Connect.svelte";
-
-    $: console.log($account);
+    import { link } from "svelte-routing";
 </script>
 
 {#if $account.isConnecting || $account.isReconnecting}
     <Button disabled>{$account.address}</Button>
 {:else if $account.address}
-    <Button on:click={() => console.log("hi")}>
+    <a
+        href={`/user/${$account.address}`}
+        class={buttonVariants({ variant: "default" })}
+        use:link
+    >
         {$account.address}
-    </Button>
+    </a>
 {:else}
     <Connect />
 {/if}
