@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { ModeWatcher } from "mode-watcher";
-    import Router from "./pages/Router.svelte";
-    import { UserButton } from "@/components/userButton";
-    import { onMount } from "svelte";
-    import { reconnect } from "./web3";
-    import LightSwitch from "@/components/ui/LightSwitch.svelte";
+    import { onMount } from 'svelte';
+    import { ModeWatcher } from 'mode-watcher';
+    import Header from '@/components/Header.svelte';
+    import Router from './pages/Router.svelte';
+    import { reconnect } from './web3';
 
     onMount(() => {
         reconnect();
@@ -12,12 +11,7 @@
 </script>
 
 <ModeWatcher />
-<header class="flex justify-end">
-    <div class="flex gap-2">
-        <UserButton />
-        <LightSwitch />
-    </div>
-</header>
-<main>
+<Header />
+<main class="px-6">
     <Router />
 </main>
