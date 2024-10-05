@@ -5,7 +5,7 @@
 </script>
 
 <header class="flex justify-between px-2 py-1 items-center">
-    <h1>web3-twitter</h1>
+    <h1>web3twit</h1>
     <div class="flex gap-2">
         <UserButton />
         <LightSwitch />

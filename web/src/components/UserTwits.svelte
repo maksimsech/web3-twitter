@@ -1,3 +1,11 @@
+<script lang="ts" context="module">
+    const formatter = new Intl.DateTimeFormat(navigator.language, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+</script>
+
 <script lang="ts">
     import { type Twit } from '@/web3';
 
@@ -7,12 +15,15 @@
 <div class="flex flex-col gap-2">
     {#each twits as twit}
         <div>
-            <p>
-                > {twit.text}
-                <span class=" text-foreground">
-                    on {new Date(twit.createdOn)}
+            <div>
+                <span class="text-red-700">></span>
+                {twit.text}
+            </div>
+            <div>
+                <span class=" text-accent-foreground">
+                    on {formatter.format(new Date(twit.createdOn * 1000))}
                 </span>
-            </p>
+            </div>
         </div>
     {/each}
 </div>
